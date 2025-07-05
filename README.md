@@ -1,6 +1,6 @@
 # CollabNotes - Real-time Collaborative Note-taking App
 
-# ==================================================
+# ==========================================
 
 ## 🌐 Live Demo
 
@@ -59,15 +59,6 @@
    git clone https://github.com/ShubhamSinghRawat007/CollabNotes.git
    cd collab-notes
 
-## 🚀 Setup Backend
-
-```bash
-cd server
-cp .env.example .env
-# Edit .env with your MongoDB URI
-npm install
-npm start 
-```
 
 2. **Setup the backend**
    ```bash
