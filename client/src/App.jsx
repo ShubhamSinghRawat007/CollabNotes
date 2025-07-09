@@ -7,7 +7,9 @@ import NotePage from "./pages/NotePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
-  const isMaintenance = import.meta.env.VITE_MAINTENANCE_MODE === "true";
+  const isMaintenance = import.meta.env.VITE_MAINTENANCE_MODE == "true";
+  console.log(isMaintenance);
+  
 
   if (isMaintenance) {
     return (
