@@ -4,7 +4,7 @@
 
 ## 🌐 Live Demo
 
-👉 [Click here to view the live app](https://collabnotes.vercel.app)
+👉 [Click here to view the live app](https://collab-notes-nine.vercel.app)
 
 ## ✨ Features
 
