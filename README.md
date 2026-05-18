@@ -57,7 +57,7 @@
 1. **Clone the repository**
    ```bash
    git clone https://github.com/ShubhamSinghRawat007/CollabNotes.git
-   cd collab-notes
+   cd CollabNotes
 
 
 2. **Setup the backend**
