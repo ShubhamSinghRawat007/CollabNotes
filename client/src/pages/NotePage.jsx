@@ -1,61 +1,75 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
 import axios from 'axios';
 import { io } from 'socket.io-client';
+
 import TextareaAutosize from 'react-textarea-autosize';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiClock, FiUsers, FiSave, FiTrash2 } from 'react-icons/fi';
+
+import {
+  motion,
+  AnimatePresence,
+} from 'framer-motion';
+
+import {
+  FiClock,
+  FiUsers,
+  FiSave,
+  FiTrash2,
+} from 'react-icons/fi';
 
 import UserAvatar from '../components/UserAvatar';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-export default function NotePage() {
+export default function NotePage({
+  noteKey
+}) {
 
   const { id } = useParams();
+
   const navigate = useNavigate();
 
   const [note, setNote] = useState(null);
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState('');
-  const [activeUsers, setActiveUsers] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const [content, setContent] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [lastUpdated, setLastUpdated] =
+    useState('');
+
+  const [activeUsers, setActiveUsers] =
+    useState([]);
+
+  const [isSaving, setIsSaving] =
+    useState(false);
 
   const socketRef = useRef(null);
+
+  // ====================================
+  // ACTIVE KEY FROM NAVBAR
+  // ====================================
+
+  const passwordRef = useRef(noteKey);
+
+  useEffect(() => {
+
+    passwordRef.current = noteKey;
+
+  }, [noteKey]);
 
   const BASE_URL =
     import.meta.env.VITE_API_URL ||
     'http://localhost:5000';
 
-
-  const passwordRef = useRef(null);
-
-  if (!passwordRef.current) {
-
-    const savedKey =
-      sessionStorage.getItem('note_key');
-
-    if (savedKey) {
-
-      passwordRef.current = savedKey;
-
-    } else {
-
-      const enteredKey = window.prompt(
-        'Enter encryption/decryption key'
-      );
-
-      passwordRef.current = enteredKey || '';
-
-      sessionStorage.setItem(
-        'note_key',
-        passwordRef.current
-      );
-    }
-  }
-
+  // ====================================
+  // ENCODERS
+  // ====================================
 
   const encoder = new TextEncoder();
+
   const decoder = new TextDecoder();
 
   // ====================================
@@ -83,7 +97,10 @@ export default function NotePage() {
   // KEY DERIVATION
   // ====================================
 
-  async function deriveKey(password, salt) {
+  async function deriveKey(
+    password,
+    salt
+  ) {
 
     const passwordKey =
       await crypto.subtle.importKey(
@@ -111,7 +128,14 @@ export default function NotePage() {
     );
   }
 
-  async function encryptText(text, password) {
+  // ====================================
+  // ENCRYPT
+  // ====================================
+
+  async function encryptText(
+    text,
+    password
+  ) {
 
     const salt =
       crypto.getRandomValues(
@@ -189,10 +213,17 @@ export default function NotePage() {
     return decoder.decode(decrypted);
   }
 
+  // ====================================
+  // FETCH NOTE
+  // ====================================
 
   useEffect(() => {
 
     const fetchNote = async () => {
+
+      if (!passwordRef.current) {
+        return;
+      }
 
       try {
 
@@ -215,11 +246,11 @@ export default function NotePage() {
 
         } catch {
 
-          alert(
-            'Wrong decryption key or corrupted note'
-          );
-
           setContent('');
+
+          alert(
+            'Wrong key for this note'
+          );
         }
 
         setLastUpdated(
@@ -243,9 +274,13 @@ export default function NotePage() {
 
     fetchNote();
 
-    // ====================================
-    // SOCKET CONNECTION
-    // ====================================
+  }, [id, navigate, noteKey]);
+
+  // ====================================
+  // SOCKET CONNECTION
+  // ====================================
+
+  useEffect(() => {
 
     socketRef.current = io(BASE_URL);
 
@@ -271,7 +306,7 @@ export default function NotePage() {
         } catch {
 
           console.log(
-            'Could not decrypt note update'
+            'Could not decrypt update'
           );
         }
 
@@ -291,11 +326,14 @@ export default function NotePage() {
     socketRef.current.on(
       'user_joined',
       (userId) => {
+
         setActiveUsers(prev => [
+
           ...new Set([
             ...prev,
             userId,
           ]),
+
         ]);
       }
     );
@@ -303,6 +341,7 @@ export default function NotePage() {
     socketRef.current.on(
       'user_left',
       (userId) => {
+
         setActiveUsers(prev =>
           prev.filter(
             uid => uid !== userId
@@ -315,10 +354,10 @@ export default function NotePage() {
       socketRef.current?.disconnect();
     };
 
-  }, [id, navigate]);
+  }, [id]);
 
   // ====================================
-  // LIVE CHANGE
+  // LIVE EDITING
   // ====================================
 
   const handleContentChange =
@@ -417,10 +456,6 @@ export default function NotePage() {
           `${BASE_URL}/notes/${id}`
         );
 
-        sessionStorage.removeItem(
-          'note_key'
-        );
-
         navigate('/');
 
       } catch (err) {
@@ -432,8 +467,9 @@ export default function NotePage() {
       }
     };
 
-  if (loading)
+  if (loading) {
     return <LoadingSpinner />;
+  }
 
   return (
 
@@ -452,12 +488,15 @@ export default function NotePage() {
         <div className="flex flex-wrap items-center gap-4 mb-6 text-gray-600">
 
           <div className="flex items-center">
+
             <FiClock className="mr-2" />
+
             <span>
               Last updated:
               {' '}
               {lastUpdated}
             </span>
+
           </div>
 
           <div className="flex items-center">
@@ -486,6 +525,7 @@ export default function NotePage() {
               </AnimatePresence>
 
             </div>
+
           </div>
 
           <div className="ml-auto flex items-center gap-2">
@@ -516,6 +556,7 @@ export default function NotePage() {
             </button>
 
           </div>
+
         </div>
 
         <TextareaAutosize
@@ -526,6 +567,7 @@ export default function NotePage() {
         />
 
       </motion.div>
+
     </div>
   );
 }
